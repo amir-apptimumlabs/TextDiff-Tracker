@@ -3,29 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Change Tracker</title>
+    <title>Text Change Tracker (Editable Div)</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         .removed { text-decoration: line-through; color: red; }
         .added { background-color: lightgreen; }
-        #output { margin-top: 10px; border: 1px solid #ccc; padding: 10px; min-height: 50px; }
+        #textArea {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 500px;
+            min-height: 150px;
+        }
+        #output { 
+            margin-top: 10px; 
+            border: 1px solid #ccc; 
+            padding: 10px; 
+            min-height: 50px; 
+        }
     </style>
 </head>
 <body>
 
-    <textarea id="textArea" rows="6" cols="50"></textarea>
+    <div id="textArea" contenteditable="true">
+        <h1>Heading: Introduction to Lorem Ipsum</h1>
+        <h2>Subheading: History of Lorem Ipsum</h2>
+        <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+            Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
+            when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+        <h2>Subheading: Modern Usage</h2>
+        <p>Today, Lorem Ipsum is used as placeholder text in various design and publishing applications.</p>
+    </div>
+
     <button id="clearStorage">Clear Storage</button>
     <div id="output"></div>
 
     <script>
         $(document).ready(function () {
-            let storageKey = "savedText";
+            let storageKey = "savedHtml";
+            let outputKey = "savedOutput";
 
-            function diffText(oldText, newText) {
-                let oldWords = oldText.split(" ");
-                let newWords = newText.split(" ");
+            function diffHtml(oldHtml, newHtml) {
+                let oldWords = oldHtml.replace(/<\/?[^>]+(>|$)/g, "").split(/\s+/);
+                let newWords = newHtml.replace(/<\/?[^>]+(>|$)/g, "").split(/\s+/);
                 let diffOutput = "";
-
+                
                 let i = 0, j = 0;
                 while (i < oldWords.length || j < newWords.length) {
                     if (i < oldWords.length && j < newWords.length && oldWords[i] === newWords[j]) {
@@ -44,20 +65,28 @@
                 return diffOutput;
             }
 
-            let savedText = localStorage.getItem(storageKey) || "";
-            $("#textArea").val(savedText);
-            $("#output").html(savedText.replace(/\n/g, "<br>"));
+            // Load saved content
+            let savedHtml = localStorage.getItem(storageKey) || $("#textArea").html();
+            let savedOutput = localStorage.getItem(outputKey) || "";
+
+            $("#textArea").html(savedHtml);
+            $("#output").html(savedOutput);
 
             $("#textArea").on("input", function () {
-                let currentText = $(this).val();
-                let comparison = diffText(savedText, currentText);
-                $("#output").html(comparison.replace(/\n/g, "<br>"));
-                localStorage.setItem(storageKey, currentText);
+                let currentHtml = $(this).html();
+                let comparison = diffHtml(savedHtml, currentHtml);
+
+                $("#output").html(comparison);
+
+                // Store both edited content and processed output
+                localStorage.setItem(storageKey, currentHtml);
+                localStorage.setItem(outputKey, $("#output").html());
             });
 
             $("#clearStorage").click(function () {
                 localStorage.removeItem(storageKey);
-                $("#textArea").val("");
+                localStorage.removeItem(outputKey);
+                $("#textArea").html("");
                 $("#output").html("");
             });
         });
