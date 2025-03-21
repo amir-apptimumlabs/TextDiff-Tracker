@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Change Tracker</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .removed { text-decoration: line-through; color: red; }
+        .added { background-color: lightgreen; }
+        #output { margin-top: 10px; border: 1px solid #ccc; padding: 10px; min-height: 50px; }
+    </style>
+</head>
+<body>
+
+    <textarea id="textArea" rows="6" cols="50"></textarea>
+    <button id="clearStorage">Clear Storage</button>
+    <div id="output"></div>
+
+    <script>
+        $(document).ready(function () {
+            let storageKey = "savedText";
+
+            function diffText(oldText, newText) {
+                let oldWords = oldText.split(" ");
+                let newWords = newText.split(" ");
+                let diffOutput = "";
+
+                let i = 0, j = 0;
+                while (i < oldWords.length || j < newWords.length) {
+                    if (i < oldWords.length && j < newWords.length && oldWords[i] === newWords[j]) {
+                        diffOutput += oldWords[i] + " ";
+                        i++; j++;
+                    } else if (i < oldWords.length && !newWords.includes(oldWords[i])) {
+                        diffOutput += `<span class="removed">${oldWords[i]}</span> `;
+                        i++;
+                    } else if (j < newWords.length && !oldWords.includes(newWords[j])) {
+                        diffOutput += `<span class="added">${newWords[j]}</span> `;
+                        j++;
+                    } else {
+                        i++; j++;
+                    }
+                }
+                return diffOutput;
+            }
+
+            let savedText = localStorage.getItem(storageKey) || "";
+            $("#textArea").val(savedText);
+            $("#output").html(savedText.replace(/\n/g, "<br>"));
+
+            $("#textArea").on("input", function () {
+                let currentText = $(this).val();
+                let comparison = diffText(savedText, currentText);
+                $("#output").html(comparison.replace(/\n/g, "<br>"));
+                localStorage.setItem(storageKey, currentText);
+            });
+
+            $("#clearStorage").click(function () {
+                localStorage.removeItem(storageKey);
+                $("#textArea").val("");
+                $("#output").html("");
+            });
+        });
+    </script>
+
+</body>
+</html>
