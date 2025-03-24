@@ -60,6 +60,13 @@
 
 
     <script>
+        let timeout = null;
+
+        document.getElementById("textArea").addEventListener("keyup", function () {
+            clearTimeout(timeout);
+            timeout = setTimeout(highlightChanges, 3000); // Auto highlight after 3 seconds of inactivity
+        });
+
         function highlightChanges() {
             var dmp = new diff_match_patch();
             var oldText = document.getElementById("originalText").innerHTML;
