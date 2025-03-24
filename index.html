@@ -60,35 +60,36 @@
 
 
     <script>
-        let timeout = null;
+        $(document).ready(function () {
+            let timeout;
 
-        document.getElementById("textArea").addEventListener("keyup", function () {
-            clearTimeout(timeout);
-            timeout = setTimeout(highlightChanges, 3000); // Auto highlight after 3 seconds of inactivity
+            $("#textArea").on("keyup", function () {
+                clearTimeout(timeout);
+                timeout = setTimeout(highlightChanges, 3000); // Auto highlight after 3 sec
+            });
+
+            function highlightChanges() {
+                let dmp = new diff_match_patch();
+                let oldText = $("#originalText").html();
+                let newText = $("#textArea").html();
+
+                let diff = dmp.diff_main(oldText, newText);
+                dmp.diff_cleanupSemantic(diff);
+
+                let resultHTML = diff.map(function (part) {
+                    if (part[0] === -1) return `<span class="removed">${part[1]}</span>`; // Removed text
+                    if (part[0] === 1) return `<span class="added">${part[1]}</span>`; // Added text
+                    return part[1]; // Unchanged text
+                }).join('');
+
+                $("#result").html(resultHTML);
+            }
+
+            $("#saveChanges").on("click", function () {
+                $("#originalText").html($("#textArea").html());
+                $("#result").empty(); // Clear the diff results
+            });
         });
-
-        function highlightChanges() {
-            var dmp = new diff_match_patch();
-            var oldText = document.getElementById("originalText").innerHTML;
-            var newText = document.getElementById("textArea").innerHTML; // Get inner HTML content
-
-            var diff = dmp.diff_main(oldText, newText);
-            dmp.diff_cleanupSemantic(diff);
-
-            var resultHTML = diff.map(function (part) {
-                if (part[0] === -1) return `<span class="removed">${part[1]}</span>`; // Removed text
-                if (part[0] === 1) return `<span class="added">${part[1]}</span>`; // Added text
-                return part[1]; // Unchanged text
-            }).join('');
-
-            document.getElementById("result").innerHTML = resultHTML;
-        }
-
-        // Update the original text with the new content
-        function updateOriginalText() {
-            document.getElementById("originalText").innerHTML = document.getElementById("textArea").innerHTML;
-            document.getElementById("result").innerHTML = ""; // Clear the diff results
-        }
 
     </script>
 
