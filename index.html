@@ -4,144 +4,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Change Tracker (Editable Div)</title>
+    <title>Google Docs-like Editor</title>
+    <script src="https://unpkg.com/diff-match-patch"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        .removed {
-            text-decoration: line-through;
-            color: red;
-        }
-
-        .added {
-            background-color: lightgreen;
-        }
-
-        #textArea {
-            border: 1px solid #ccc;
-            padding: 10px;
-            width: 500px;
-            min-height: 150px;
-        }
-
-        #output {
-            margin-top: 10px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            min-height: 50px;
-        }
-    </style>
 </head>
 
 <body>
 
-    <div id="textArea" contenteditable="true">
-        <h1>Heading: Introduction to Lorem Ipsum</h1>
-        <h2>Subheading: History of Lorem Ipsum</h2>
-        <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-            Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
-            when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
-        <h2>Subheading: Modern Usage</h2>
-        <p>Today, Lorem Ipsum is used as placeholder text in various design and publishing applications.</p>
-    </div>
+    <h2>Editable Document</h2>
+    <div id="originalText">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has
+        been the industry's standard dummy text ever since the 2000s</div>
+    <textarea
+        id="newText">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 2000s</textarea>
+    <button onclick="highlightChanges()">Compare</button>
+    <div id="result"></div>
 
-    <button id="clearStorage">Clear Storage</button>
-    <div id="output"></div>
+    <style>
+        .removed {
+            background-color: #f8d7da;
+            text-decoration: line-through;
+            padding: 2px;
+        }
+
+        .added {
+            background-color: #d4edda;
+            padding: 2px;
+        }
+    </style>
+
 
     <script>
-        $(document).ready(function () {
-            let storageKey = "savedHtml";
-            let outputKey = "savedOutput";
+        function highlightChanges() {
+            var dmp = new diff_match_patch();
+            var oldText = document.getElementById("originalText").innerText;
+            var newText = document.getElementById("newText").value;
 
-            function diffHtml(oldHtml, newHtml) {
-                let oldWords = oldHtml.replace(/<\/?[^>]+(>|$)/g, "").split(/\s+/);
-                let newWords = newHtml.replace(/<\/?[^>]+(>|$)/g, "").split(/\s+/);
-                let diffOutput = "";
+            var diff = dmp.diff_main(oldText, newText);
+            dmp.diff_cleanupSemantic(diff);
 
-                let i = 0, j = 0;
-                while (i < oldWords.length || j < newWords.length) {
-                    if (i < oldWords.length && j < newWords.length && oldWords[i] === newWords[j]) {
-                        diffOutput += oldWords[i] + " ";
-                        i++; j++;
-                    } else if (i < oldWords.length && !newWords.includes(oldWords[i])) {
-                        diffOutput += `<span class="removed">${oldWords[i]}</span> `;
-                        i++;
-                    } else if (j < newWords.length && !oldWords.includes(newWords[j])) {
-                        diffOutput += `<span class="added">${newWords[j]}</span> `;
-                        j++;
-                    } else {
-                        i++; j++;
-                    }
-                }
-                return diffOutput;
-            }
+            var resultHTML = diff.map(function (part) {
+                if (part[0] === -1) return `<span class="removed">${part[1]}</span>`; // Removed text
+                if (part[0] === 1) return `<span class="added">${part[1]}</span>`; // Added text
+                return part[1]; // Unchanged text
+            }).join('');
 
-            function htmlToBBCode(html) {
-                // Replace HTML tags with BBCode equivalents
-                html = html.replace(/<h1>(.*?)<\/h1>/gi, '[h1]$1[/h1]');
-                html = html.replace(/<h2>(.*?)<\/h2>/gi, '[h2]$1[/h2]');
-                html = html.replace(/<h3>(.*?)<\/h3>/gi, '[h3]$1[/h3]');
-                html = html.replace(/<h4>(.*?)<\/h4>/gi, '[h4]$1[/h4]');
-                html = html.replace(/<h5>(.*?)<\/h5>/gi, '[h5]$1[/h5]');
-                html = html.replace(/<h6>(.*?)<\/h6>/gi, '[h6]$1[/h6]');
-                html = html.replace(/<p>(.*?)<\/p>/gi, '[p]$1[/p]');
-                html = html.replace(/<strong>(.*?)<\/strong>/gi, '[b]$1[/b]');
-                html = html.replace(/<b>(.*?)<\/b>/gi, '[b]$1[/b]');
-                html = html.replace(/<em>(.*?)<\/em>/gi, '[i]$1[/i]');
-                html = html.replace(/<i>(.*?)<\/i>/gi, '[i]$1[/i]');
-                html = html.replace(/<u>(.*?)<\/u>/gi, '[u]$1[/u]');
-                html = html.replace(/<s>(.*?)<\/s>/gi, '[s]$1[/s]');
-                html = html.replace(/<strike>(.*?)<\/strike>/gi, '[s]$1[/s]');
-                html = html.replace(/<a href="(.*?)">(.*?)<\/a>/gi, '[url=$1]$2[/url]');
-                html = html.replace(/<img src="(.*?)" alt="(.*?)">/gi, '[img=$1]$2[/img]');
-                html = html.replace(/<ul>(.*?)<\/ul>/gi, '[list]$1[/list]');
-                html = html.replace(/<ol>(.*?)<\/ol>/gi, '[list=1]$1[/list]');
-                html = html.replace(/<li>(.*?)<\/li>/gi, '[*]$1');
-                html = html.replace(/<blockquote>(.*?)<\/blockquote>/gi, '[quote]$1[/quote]');
-                html = html.replace(/<code>(.*?)<\/code>/gi, '[code]$1[/code]');
-                html = html.replace(/<pre>(.*?)<\/pre>/gi, '[pre]$1[/pre]');
-                html = html.replace(/<br>/gi, '\n');
-                html = html.replace(/<hr>/gi, '[hr]');
-                html = html.replace(/<div>(.*?)<\/div>/gi, '$1'); // Divs are often used for layout, so just remove them
-                html = html.replace(/<span>(.*?)<\/span>/gi, '$1'); // Spans are often used for styling, so just remove them
-
-                // Remove any remaining HTML tags (optional, for safety)
-                html = html.replace(/<[^>]*>/g, '');
-
-                return html;
-            }
-
-            // Get the HTML content from the div
-            var htmlContent = $('#textArea').html();
-            // Convert HTML to BBCode
-            var bbcodeContent = htmlToBBCode(htmlContent);
-            // Log the BBCode to the console
-            console.log('bbcodeContent', bbcodeContent);
-
-            // Load saved content
-            let savedHtml = localStorage.getItem(storageKey) || $("#textArea").html();
-            let savedOutput = localStorage.getItem(outputKey) || "";
-
-            $("#textArea").html(savedHtml);
-            $("#output").html(savedOutput);
-
-            $("#textArea").on("input", function () {
-                let currentHtml = $(this).html();
-                let comparison = diffHtml(savedHtml, currentHtml);
-
-                $("#output").html(comparison);
-
-                // Store both edited content and processed output
-                localStorage.setItem(storageKey, currentHtml);
-                localStorage.setItem(outputKey, $("#output").html());
-            });
-
-            $("#clearStorage").click(function () {
-                localStorage.removeItem(storageKey);
-                localStorage.removeItem(outputKey);
-                $("#textArea").html("");
-                $("#output").html("");
-            });
-        });
+            document.getElementById("result").innerHTML = resultHTML;
+        }
     </script>
 
 </body>
