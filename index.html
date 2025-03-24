@@ -12,11 +12,29 @@
 <body>
 
     <h2>Editable Document</h2>
-    <div id="originalText">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has
-        been the industry's standard dummy text ever since the 2000s</div>
-    <textarea
-        id="newText">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 2000s</textarea>
+    <div id="originalText">
+        <h1>Heading: Introduction to Lorem Ipsum</h1>
+        <h2>Subheading: History of Lorem Ipsum</h2>
+        <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+            Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
+            when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+        <h2>Subheading: Modern Usage</h2>
+        <p>Today, Lorem Ipsum is used as placeholder text in various design and publishing applications.</p>
+    </div>
+
+    <div id="textArea" contenteditable="true">
+        <h1>Heading: Introduction to Lorem Ipsum</h1>
+        <h2>Subheading: History of Lorem Ipsum</h2>
+        <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+            Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
+            when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+        <h2>Subheading: Modern Usage</h2>
+        <p>Today, Lorem Ipsum is used as placeholder text in various design and publishing applications.</p>
+    </div>
+
     <button onclick="highlightChanges()">Compare</button>
+    <button onclick="updateOriginalText()">Save Changes</button>
+
     <div id="result"></div>
 
     <style>
@@ -30,14 +48,21 @@
             background-color: #d4edda;
             padding: 2px;
         }
+
+        #textArea {
+            border: 1px solid #ccc;
+            padding: 10px;
+            min-height: 100px;
+        }
     </style>
+
 
 
     <script>
         function highlightChanges() {
             var dmp = new diff_match_patch();
-            var oldText = document.getElementById("originalText").innerText;
-            var newText = document.getElementById("newText").value;
+            var oldText = document.getElementById("originalText").innerHTML;
+            var newText = document.getElementById("textArea").innerHTML; // Get inner HTML content
 
             var diff = dmp.diff_main(oldText, newText);
             dmp.diff_cleanupSemantic(diff);
@@ -50,6 +75,13 @@
 
             document.getElementById("result").innerHTML = resultHTML;
         }
+
+        // Update the original text with the new content
+        function updateOriginalText() {
+            document.getElementById("originalText").innerHTML = document.getElementById("textArea").innerHTML;
+            document.getElementById("result").innerHTML = ""; // Clear the diff results
+        }
+
     </script>
 
 </body>
